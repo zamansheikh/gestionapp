@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "91889354158",
+    "project_id": "gestion-v-v-app-kqvowz",
+    "storage_bucket": "gestion-v-v-app-kqvowz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:91889354158:android:2537777c221410e07f343f",
+        "android_client_info": {
+          "package_name": "com.gestionviviendavacacional.gestionapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVRniWoUfw7okPZK0f8ry8AbwY8bq3YEo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
