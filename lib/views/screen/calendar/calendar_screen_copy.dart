@@ -468,10 +468,62 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                 ),
                 // Events Section
                 const SizedBox(height: 8.0),
+                Wrap(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'KEY'.tr,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    cellIndicator(Color(0xFF6A6A6A), "Past reservation".tr),
+                    cellIndicator(Color(0xFFD80665), "Current Reservation".tr),
+                    cellIndicator(Color(0xFFFFACA5), "Comming Reservation".tr),
+                    Row(
+                      children: [
+                        cellIndicator(Color(0xff5092F9), "Today".tr),
+                        cellIndicator(Color(0xffffffff), "Free".tr),
+                      ],
+                    ),
+                  ],
+                ),
               ],
             );
           }),
         ),
+      ),
+    );
+  }
+
+  Widget cellIndicator(Color color, String name) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            height: 24,
+            width: 24,
+            padding: const EdgeInsets.all(10),
+            margin: const EdgeInsets.only(top: 5, left: 8, bottom: 5),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black),
+
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(name, style: const TextStyle(fontSize: 16)),
+        ],
       ),
     );
   }

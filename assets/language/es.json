@@ -122,5 +122,10 @@
   "Phone Number": "Número De Teléfono",
   "Calendar": "Calendario",
   "Are you sure you want to log out of your account?": "¿Estás seguro de que quieres cerrar sesión en tu cuenta?",
-  "Cancel": "Cancelar"
+  "Cancel": "Cancelar",
+  "KEY": "LEYENDA",
+  "Past reservation": "Reserva Pasada",
+  "Current Reservation": "Reserva Actual",
+  "Comming Reservation": "Próxima Reserva",
+  "Free": "Libre"
 }

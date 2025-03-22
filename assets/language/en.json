@@ -122,5 +122,10 @@
   "Phone Number": "Phone Number",
   "Calendar": "Calendar",
   "Are you sure you want to log out of your account?": "Are you sure you want to log out of your account?",
-  "Cancel": "Cancel"
+  "Cancel": "Cancel",
+  "KEY":"KEY",
+  "Past reservation": "Past reservation",
+  "Current Reservation": "Current Reservation",
+  "Comming Reservation": "Comming Reservation",
+  "Free": "Free"
 }
