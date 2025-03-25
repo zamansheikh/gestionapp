@@ -79,6 +79,7 @@ class NotificationServices {
       // For IoS
       if (Platform.isIOS) {
         forgroundMessage();
+        
       }
 
       if (Platform.isAndroid) {
