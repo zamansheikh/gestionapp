@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:gestionapp/helpers/logger.dart';
 import 'package:gestionapp/helpers/prefs_helper.dart';
 import 'package:gestionapp/models/calender_model.dart';
@@ -15,6 +16,7 @@ class CalendarController extends GetxController {
   RxInt selectedYear = DateTime.now().year.obs;
   RxInt selectedMonth = DateTime.now().month.obs;
   RxString userRole = 'user'.obs;
+  RxInt selectedRoomIndex = 0.obs;
 
   int fixedYearStart = DateTime.now().subtract(const Duration(days: 30)).year;
   int fixedMonthStart = DateTime.now().subtract(const Duration(days: 30)).month;
@@ -41,7 +43,7 @@ class CalendarController extends GetxController {
         calenderModel.value = List<CalenderModel>.from(
           data.map((x) => CalenderModel.fromJson(x)),
         );
-        "Data converted: fromJson to Model".logW();
+        debugPrint("Data converted: fromJson to CalenderModel");
       } catch (e) {
         "Something wrong".logE();
       }
@@ -75,7 +77,43 @@ class CalendarController extends GetxController {
           reservationModel.add(ReservationModel.fromJson(data));
         }
 
-        "Successfully Converted".logE();
+        debugPrint(
+          "Log from:reservationProperty func: -> Successfully Converted",
+        );
+      } catch (e) {
+        e.toString().logE();
+      }
+      reservationLoading(false);
+    } else {
+      reservationLoading(false);
+      ApiChecker.checkApi(response);
+    }
+  }
+
+  RxList<ReservationModel> reservationLogModel = <ReservationModel>[].obs;
+  reservationPropertylog({
+    String id = '',
+    String startDate = '',
+    String endDate = '',
+  }) async {
+    reservationLoading(true);
+    var response = await ApiClient.getData(
+      ApiConstants.reservationPropertyLog(id, startDate, endDate),
+    );
+
+    if (response.statusCode == 200) {
+      var data = response.body["data"];
+      try {
+        //add to first index
+        if (reservationLogModel.isNotEmpty) {
+          reservationLogModel[0] = ReservationModel.fromJson(data);
+        } else {
+          reservationLogModel.add(ReservationModel.fromJson(data));
+        }
+
+        debugPrint(
+          "Log from: reservationPropertylog func: -> Successfully Converted",
+        );
       } catch (e) {
         e.toString().logE();
       }

@@ -97,7 +97,9 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
                   value:
                       (widget.reservation.notes.isEmpty)
                           ? 'N/A'.tr
-                          : widget.reservation.notes.first.remarks,
+                          : widget.reservation.notes
+                              .map((e) => e.remarks)
+                              .join(', '),
                 ),
               ],
             ),

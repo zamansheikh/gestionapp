@@ -16,7 +16,6 @@ class CalenderScreenCopy extends StatefulWidget {
 }
 
 class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
-  int _selectedRoomIndex = 0;
   DateTime _focusedDay = DateTime.now();
   final _currentDate = DateTime.now();
   final List<int> _years = List.generate(
@@ -40,7 +39,7 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
 
   void resetButton() {
     setState(() {
-      _selectedRoomIndex = 0;
+      controller.selectedRoomIndex.value = 0;
       _isLoading = false;
       _isRoomLoading = false;
     });
@@ -83,6 +82,11 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
         startDate: DateUtilsx.getStartDateOfMonth(),
         endDate: DateUtilsx.getEndDateOfMonth(),
       );
+      await controller.reservationPropertylog(
+        id: controller.calenderModel.first.id!,
+        startDate: DateUtilsx.getStartDateOfMonth(),
+        endDate: DateUtilsx.getEndDateOfMonth(),
+      );
       setState(() {
         _isLoading = false;
       });
@@ -107,6 +111,11 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
       "Logged in User ID: $userID".logW();
       "Room available for${controller.calenderModel[rcvIndex].id!}".logW();
       await controller.reservationProperty(
+        id: controller.calenderModel[rcvIndex].id!,
+        startDate: startDate,
+        endDate: endDate,
+      );
+      await controller.reservationPropertylog(
         id: controller.calenderModel[rcvIndex].id!,
         startDate: startDate,
         endDate: endDate,
@@ -139,13 +148,13 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                 SizedBox(width: 55.w),
                 Text('Calendar'.tr, style: TextStyle(fontSize: 20.sp)),
                 Spacer(),
-                IconButton(
-                  onPressed: () {
-                    resetButton();
-                    getCurrectUserId();
-                  },
-                  icon: Icon(Icons.refresh, color: Colors.black),
-                ),
+                // IconButton(
+                //   onPressed: () {
+                //     resetButton();
+                //     getCurrectUserId();
+                //   },
+                //   icon: Icon(Icons.refresh, color: Colors.black),
+                // ),
                 const SizedBox(width: 24),
               ],
             ),
@@ -157,7 +166,7 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
           // Simplified refresh: just update for the selected room and dates
           if (controller.calenderModel.isNotEmpty) {
             getCurrectUserIdSpecific(
-              _selectedRoomIndex,
+              controller.selectedRoomIndex.value,
               "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
               DateUtilsx.getEndDateFromMonthAndYear(
                 controller.selectedMonth.value,
@@ -200,7 +209,7 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                               return InkWell(
                                 onTap: () async {
                                   setState(() {
-                                    _selectedRoomIndex = index;
+                                    controller.selectedRoomIndex.value = index;
                                   });
 
                                   // Only call getCurrectUserIdSpecific, which sets _isRoomLoading.
@@ -215,37 +224,43 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                                     );
                                   }
                                 },
-                                child: Container(
-                                  margin: const EdgeInsets.all(5),
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        _selectedRoomIndex == index
-                                            ? const Color(0xFFD80665)
-                                            : const Color(0xFFE6E6E6),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: .5,
+                                child: Obx(() {
+                                  return Container(
+                                    margin: const EdgeInsets.all(5),
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          controller.selectedRoomIndex.value ==
+                                                  index
+                                              ? const Color(0xFFD80665)
+                                              : const Color(0xFFE6E6E6),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: .5,
+                                      ),
                                     ),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10.0,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '${controller.calenderModel[index].roomName}',
-                                        style: TextStyle(
-                                          color:
-                                              _selectedRoomIndex == index
-                                                  ? Colors.white
-                                                  : Colors.black,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10.0,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${controller.calenderModel[index].roomName}',
+                                          style: TextStyle(
+                                            color:
+                                                controller
+                                                            .selectedRoomIndex
+                                                            .value ==
+                                                        index
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ),
+                                  );
+                                }),
                               );
                             },
                           ),
@@ -271,7 +286,7 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                         // Call getCurrectUserIdSpecific for updated dates
                         if (controller.calenderModel.isNotEmpty) {
                           getCurrectUserIdSpecific(
-                            _selectedRoomIndex,
+                            controller.selectedRoomIndex.value,
                             DateUtilsx.getStartDateOfMonth(),
                             DateUtilsx.getEndDateOfMonth(),
                           );
@@ -290,85 +305,89 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                     ),
 
                     // Year Dropdown
-                    Container(
-                      height: 35,
-                      padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF333333)),
-                        borderRadius: BorderRadius.circular(4.0),
-                      ),
-                      child: DropdownButton<int>(
-                        value: controller.selectedYear.value,
-                        items:
-                            _years.map((year) {
-                              return DropdownMenuItem(
-                                value: year,
-                                child: Text(year.toString()),
-                              );
-                            }).toList(),
-                        onChanged: (value) async {
-                          setState(() {
-                            controller.selectedYear.value = value!;
-                            _focusedDay = DateTime(
-                              controller.selectedYear.value,
-                              controller.selectedMonth.value,
-                            );
-                          });
-                          // Call getCurrectUserIdSpecific for updated year
-                          if (controller.calenderModel.isNotEmpty) {
-                            getCurrectUserIdSpecific(
-                              _selectedRoomIndex,
-                              "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                              DateUtilsx.getEndDateFromMonthAndYear(
-                                controller.selectedMonth.value,
+                    Obx(() {
+                      return Container(
+                        height: 35,
+                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFF333333)),
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                        child: DropdownButton<int>(
+                          value: controller.selectedYear.value,
+                          items:
+                              _years.map((year) {
+                                return DropdownMenuItem(
+                                  value: year,
+                                  child: Text(year.toString()),
+                                );
+                              }).toList(),
+                          onChanged: (value) async {
+                            setState(() {
+                              controller.selectedYear.value = value!;
+                              _focusedDay = DateTime(
                                 controller.selectedYear.value,
-                              ),
-                            );
-                          }
-                        },
-                        underline: const SizedBox(),
-                      ),
-                    ),
+                                controller.selectedMonth.value,
+                              );
+                            });
+                            // Call getCurrectUserIdSpecific for updated year
+                            if (controller.calenderModel.isNotEmpty) {
+                              getCurrectUserIdSpecific(
+                                controller.selectedRoomIndex.value,
+                                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                                DateUtilsx.getEndDateFromMonthAndYear(
+                                  controller.selectedMonth.value,
+                                  controller.selectedYear.value,
+                                ),
+                              );
+                            }
+                          },
+                          underline: const SizedBox(),
+                        ),
+                      );
+                    }),
 
                     // Month Dropdown
-                    Container(
-                      height: 35,
-                      padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF333333)),
-                        borderRadius: BorderRadius.circular(4.0),
-                      ),
-                      child: DropdownButton<int>(
-                        value: controller.selectedMonth.value,
-                        items: List.generate(_months.length, (index) {
-                          return DropdownMenuItem(
-                            value: index + 1,
-                            child: Text(_months[index].tr),
-                          );
-                        }),
-                        onChanged: (value) async {
-                          setState(() {
-                            controller.selectedMonth.value = value!;
-                            _focusedDay = DateTime(
-                              controller.selectedYear.value,
-                              controller.selectedMonth.value,
+                    Obx(() {
+                      return Container(
+                        height: 35,
+                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFF333333)),
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                        child: DropdownButton<int>(
+                          value: controller.selectedMonth.value,
+                          items: List.generate(_months.length, (index) {
+                            return DropdownMenuItem(
+                              value: index + 1,
+                              child: Text(_months[index].tr),
                             );
-                          });
-                          // Call getCurrectUserIdSpecific for updated month
-                          if (controller.calenderModel.isNotEmpty) {
-                            getCurrectUserIdSpecific(
-                              _selectedRoomIndex,
-                              "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                              DateUtilsx.getEndDateFromMonthAndYear(
-                                controller.selectedMonth.value,
+                          }),
+                          onChanged: (value) async {
+                            setState(() {
+                              controller.selectedMonth.value = value!;
+                              _focusedDay = DateTime(
                                 controller.selectedYear.value,
-                              ),
-                            );
-                          }
-                        },
-                        underline: const SizedBox(),
-                      ),
-                    ),
+                                controller.selectedMonth.value,
+                              );
+                            });
+                            // Call getCurrectUserIdSpecific for updated month
+                            if (controller.calenderModel.isNotEmpty) {
+                              getCurrectUserIdSpecific(
+                                controller.selectedRoomIndex.value,
+                                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                                DateUtilsx.getEndDateFromMonthAndYear(
+                                  controller.selectedMonth.value,
+                                  controller.selectedYear.value,
+                                ),
+                              );
+                            }
+                          },
+                          underline: const SizedBox(),
+                        ),
+                      );
+                    }),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -449,26 +468,26 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                     child:
                         _isRoomLoading // Conditionally show loading indicator
                             ? const Center(child: CircularProgressIndicator())
-                            : Container(
-                              decoration: const BoxDecoration(),
-                              child: GridView.count(
-                                crossAxisSpacing: 4.0,
-                                mainAxisSpacing: 2.0,
-                                crossAxisCount: 7,
-                                children: buildCalendarDays(
-                                  dateToday: _currentDate,
-                                  date: firstDayOfMonth,
-                                  controller: controller,
-                                  selectedMonth: controller.selectedMonth.value,
-                                  selectedYear: controller.selectedYear.value,
-                                ),
+                            : GridView.count(
+                              crossAxisSpacing: 3.0,
+                              mainAxisSpacing: 6.0,
+                              crossAxisCount: 7,
+                              children: buildCalendarDays(
+                                dateToday: _currentDate,
+                                date: firstDayOfMonth,
+                                controller: controller,
+                                selectedMonth: controller.selectedMonth.value,
+                                selectedYear: controller.selectedYear.value,
                               ),
                             ),
                   ),
                 ),
-                // Events Section
+
                 const SizedBox(height: 8.0),
-                Wrap(
+
+                // Events Section
+                Column(
+                  // REMOVE Expanded here
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(left: 8.0),
@@ -483,11 +502,22 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                         ),
                       ),
                     ),
-                    cellIndicator(Color(0xFF6A6A6A), "Past reservation".tr),
-                    cellIndicator(Color(0xFFD80665), "Current Reservation".tr),
-                    cellIndicator(Color(0xFFFFACA5), "Comming Reservation".tr),
                     Row(
                       children: [
+                        cellIndicator(Color(0xFF6A6A6A), "Past reservation".tr),
+                        cellIndicator(
+                          Color(0xFFD80665),
+                          "Current Reservation".tr,
+                        ),
+                      ],
+                    ),
+
+                    Row(
+                      children: [
+                        cellIndicator(
+                          Color(0xFFFFACA5),
+                          "Comming Reservation".tr,
+                        ),
                         cellIndicator(Color(0xff5092F9), "Today".tr),
                         cellIndicator(Color(0xffffffff), "Free".tr),
                       ],
@@ -510,10 +540,10 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            height: 24,
-            width: 24,
+            height: 20,
+            width: 20,
             padding: const EdgeInsets.all(10),
-            margin: const EdgeInsets.only(top: 5, left: 8, bottom: 5),
+            margin: const EdgeInsets.only(top: 4, left: 8, bottom: 4),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.black),
 
@@ -522,7 +552,7 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
             ),
           ),
           const SizedBox(width: 8),
-          Text(name, style: const TextStyle(fontSize: 16)),
+          Text(name, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );

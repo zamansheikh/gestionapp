@@ -204,7 +204,9 @@ List<Widget> buildCalendarDays({
                   roomBookEndList[i - 1],
                 )) {
               if (DateUtilsx.isDatePast(roomBookEndList[i - 1])) {
+                //! Note: -1 applied to avoid the index out of range error
                 if (roomBookEndList.length > i &&
+                    roomBookStartList.length > i + 1 &&
                     DateUtilsx.areDatesEqual(
                       roomBookEndList[i],
                       roomBookStartList[i + 1],
