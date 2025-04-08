@@ -17,7 +17,7 @@ class CalenderScreenCopy extends StatefulWidget {
 
 class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
   DateTime _focusedDay = DateTime.now();
-  final _currentDate = DateTime.now();
+  var currentDate = DateTime.now();
   final List<int> _years = List.generate(
     7,
     (index) => DateTime.now().year - 3 + index,
@@ -70,6 +70,7 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
   getCurrectUserId() async {
     setState(() {
       _isLoading = true;
+      currentDate = DateTime.now();
     });
     final userID = await PrefsHelper.getString(AppConstants.user);
     await controller.calendarReserve(id: userID);
@@ -104,6 +105,7 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
   ) async {
     setState(() {
       _isRoomLoading = true; // Room-specific loading starts
+      currentDate = DateTime.now();
     });
     final userID = await PrefsHelper.getString(AppConstants.user);
     // await controller.calendarReserve(id: userID); // No need to call again.
@@ -173,6 +175,8 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                 controller.selectedYear.value,
               ),
             );
+          } else {
+            getCurrectUserId(); // Refresh all data if empty
           }
         },
         child: Padding(
@@ -470,10 +474,10 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                             ? const Center(child: CircularProgressIndicator())
                             : GridView.count(
                               crossAxisSpacing: 3.0,
-                              mainAxisSpacing: 6.0,
+                              mainAxisSpacing: 3.0,
                               crossAxisCount: 7,
                               children: buildCalendarDays(
-                                dateToday: _currentDate,
+                                dateToday: currentDate,
                                 date: firstDayOfMonth,
                                 controller: controller,
                                 selectedMonth: controller.selectedMonth.value,
@@ -482,9 +486,7 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                             ),
                   ),
                 ),
-
-                const SizedBox(height: 8.0),
-
+                const SizedBox(height: 4.0),
                 // Events Section
                 Column(
                   // REMOVE Expanded here
@@ -496,32 +498,17 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                         child: Text(
                           'KEY'.tr,
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        cellIndicator(Color(0xFF6A6A6A), "Past reservation".tr),
-                        cellIndicator(
-                          Color(0xFFD80665),
-                          "Current Reservation".tr,
-                        ),
-                      ],
-                    ),
-
-                    Row(
-                      children: [
-                        cellIndicator(
-                          Color(0xFFFFACA5),
-                          "Comming Reservation".tr,
-                        ),
-                        cellIndicator(Color(0xff5092F9), "Today".tr),
-                        cellIndicator(Color(0xffffffff), "Free".tr),
-                      ],
-                    ),
+                    cellIndicator(Color(0xFF6A6A6A), "Past reservation".tr),
+                    cellIndicator(Color(0xFFD80665), "Current Reservation".tr),
+                    cellIndicator(Color(0xFFFFACA5), "Comming Reservation".tr),
+                    cellIndicator(Color(0xff5092F9), "Today".tr),
+                    cellIndicator(Color(0xffffffff), "Free".tr),
                   ],
                 ),
               ],
@@ -540,10 +527,10 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            height: 20,
-            width: 20,
+            height: 16,
+            width: 16,
             padding: const EdgeInsets.all(10),
-            margin: const EdgeInsets.only(top: 4, left: 8, bottom: 4),
+            margin: const EdgeInsets.only(top: 2, left: 8, bottom: 2),
             decoration: BoxDecoration(
               border: Border.all(color: Colors.black),
 

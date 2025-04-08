@@ -39,14 +39,8 @@ class FirebaseNotificationService {
       return;
     }
 
-    // Retrieve and set APNS token
-    String? apnsToken = await _firebaseMessaging.getAPNSToken();
-    if (apnsToken != null) {
-      debugPrint("🔑 APNS Token: $apnsToken");
-    } else {
-      debugPrint("⚠️ APNS Token is not available yet.");
-    }
-
+    // Retrieve and set FCM/APNS token
+    await printFCMToken();
     // Initialize local notifications
     const AndroidInitializationSettings androidInitSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -70,7 +64,6 @@ class FirebaseNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint("📩 App opened from notification: ${message.data}");
     });
-    await printFCMToken();
 
     // Initialize socket connection
     await initializeSocket();
@@ -102,7 +95,12 @@ class FirebaseNotificationService {
                     icon: '@mipmap/ic_launcher',
                   )
                   : null,
-          iOS: const DarwinNotificationDetails(),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true, // Show as an alert
+            presentBadge: true, // Update badge
+            presentSound: true, // Play sound
+            sound: 'default', // Optional: custom sound file
+          ),
         ),
       );
     }
@@ -112,9 +110,10 @@ class FirebaseNotificationService {
   static Future<String?> getFCMToken() async {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       // Retrieve APNS token for iOS
-      String? apnsToken = await _firebaseMessaging.getAPNSToken();
+      // String? apnsToken = await _firebaseMessaging.getAPNSToken();
+      String? apnsToken = await _firebaseMessaging.getToken();
       if (apnsToken != null) {
-        debugPrint("🔑 APNS Token: $apnsToken");
+        debugPrint("🔑 APNS Token 1: $apnsToken");
         return apnsToken;
       } else {
         debugPrint("⚠️ APNS Token is not available yet.");
@@ -122,14 +121,16 @@ class FirebaseNotificationService {
       }
     } else {
       // Retrieve FCM token for other platforms
-      return await _firebaseMessaging.getToken();
+      String? fcmToken = await _firebaseMessaging.getToken();
+      debugPrint("🔑 FCM Token 1: $fcmToken");
+      return fcmToken;
     }
   }
 
   /// **Print FCM Token & Store it in Preferences**
   static Future<void> printFCMToken() async {
     String token = await PrefsHelper.getString(AppConstants.fcmToken);
-    if (token.isNotEmpty) {
+    if (token.isNotEmpty && token.length > 5) {
       debugPrint("🔑 FCM Token (Stored): $token");
     } else {
       token = await getFCMToken() ?? '';
@@ -160,7 +161,7 @@ class FirebaseNotificationService {
 
       if (token.isNotEmpty) {
         socket.emit('fcmToken', {'userId': userId, 'fcmToken': token});
-        print('🔑 FCM Token sent to server: $token');
+        debugPrint('🔑 FCM Token for userid: $userId send to server: $token');
       } else {
         socket.emit('fcmToken', {'userId': userId, 'fcmToken': ''});
       }

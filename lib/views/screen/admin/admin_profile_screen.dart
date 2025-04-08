@@ -69,6 +69,24 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                         isLogout: true,
                       ),
                       _divider(),
+
+                      if (_userController.getUserProfileModel.value.name ==
+                              null &&
+                          _userController.getUserProfileModel.value.image ==
+                              null)
+                        Center(
+                          child: Text(
+                            'Maybe User Token Expired, Please Logout and Re-logIn Again'
+                                .tr,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w300,
+                              color: AppColors.textColor,
+                            ),
+                          ),
+                        )
+                      else
+                        const SizedBox(),
                     ],
                   ),
                 ),
@@ -93,45 +111,74 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         Stack(
           alignment: Alignment.bottomRight,
           children: [
-            Container(
-              width: 120.w,
-              height: 120.w,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFFFB3F81),
-                    Color(0xFFB749BB),
-                    Color(0xFF8C4AEF),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(4.r),
-                child: ClipOval(
-                  child: Image.network(
-                    ApiConstants.imageBaseUrl +
-                        _userController.getUserProfileModel.value.image!,
-                    fit: BoxFit.cover,
-                    width: 120.w,
-                     height: 120.w,
+            if (_userController.getUserProfileModel.value.image != null)
+              Container(
+                width: 120.w,
+                height: 120.w,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFFFB3F81),
+                      Color(0xFFB749BB),
+                      Color(0xFF8C4AEF),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
+                child: Padding(
+                  padding: EdgeInsets.all(4.r),
+                  child: ClipOval(
+                    child: Image.network(
+                      ApiConstants.imageBaseUrl +
+                          _userController.getUserProfileModel.value.image!,
+                      fit: BoxFit.cover,
+                      width: 120.w,
+                      height: 120.w,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 120.w,
+                height: 120.w,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFFFB3F81),
+                      Color(0xFFB749BB),
+                      Color(0xFF8C4AEF),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: const Icon(Icons.person, size: 60, color: Colors.white),
               ),
-            ),
           ],
         ),
         SizedBox(height: 16.h),
-        Text(
-          _userController.getUserProfileModel.value.name!.tr,
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textColor,
+        if (_userController.getUserProfileModel.value.name != null)
+          Text(
+            _userController.getUserProfileModel.value.name!.tr,
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textColor,
+            ),
+          )
+        else
+          Text(
+            'No User Found'.tr,
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textColor,
+            ),
           ),
-        ),
         SizedBox(height: 16.h),
         // Buttons added below
         Row(

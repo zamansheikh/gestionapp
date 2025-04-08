@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:gestionapp/helpers/logger.dart';
 import 'package:gestionapp/models/getUserProfileModel.dart';
 import 'package:gestionapp/models/room_model.dart';
@@ -21,8 +22,7 @@ class GetUserController extends GetxController {
       var data = response.body["data"];
       try {
         getUserProfileModel.value = GetUserProfileModel.fromJson(data);
-        getUserProfileModel.logD();
-        "Successfully Converted".logE();
+        debugPrint("User Profile converted");
         getUserLoading(false);
       } catch (e) {
         e.toString().logE();
