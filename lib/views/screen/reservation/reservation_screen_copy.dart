@@ -167,117 +167,6 @@ class _ReservationsScreenCopyState extends State<ReservationsScreenCopy> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Year, Month Dropdowns, and Today Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    // Today Button
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          // No need for _focusedDay in this screen
-                          controller.selectedYear.value = DateTime.now().year;
-                          controller.selectedMonth.value = DateTime.now().month;
-                        });
-                        if (controller.calenderModel.isNotEmpty) {
-                          getCurrectUserIdSpecific(
-                            controller.selectedRoomIndex.value,
-                            DateUtilsx.getStartDateOfMonth(),
-                            DateUtilsx.getEndDateOfMonth(),
-                          );
-                        }
-                      },
-                      child: Container(
-                        height: 35,
-                        width: 60,
-                        padding: const EdgeInsets.all(5.0),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFF333333)),
-                          borderRadius: BorderRadius.circular(4.0),
-                        ),
-                        child: Center(child: Text("Today".tr)),
-                      ),
-                    ),
-
-                    // Year Dropdown
-                    Obx(() {
-                      return Container(
-                        height: 35,
-                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFF333333)),
-                          borderRadius: BorderRadius.circular(4.0),
-                        ),
-                        child: DropdownButton<int>(
-                          value: controller.selectedYear.value,
-                          items:
-                              _years.map((year) {
-                                return DropdownMenuItem(
-                                  value: year,
-                                  child: Text(year.toString()),
-                                );
-                              }).toList(),
-                          onChanged: (value) async {
-                            setState(() {
-                              controller.selectedYear.value = value!;
-                            });
-                            if (controller.calenderModel.isNotEmpty) {
-                              getCurrectUserIdSpecific(
-                                controller.selectedRoomIndex.value,
-                                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                                DateUtilsx.getEndDateFromMonthAndYear(
-                                  controller.selectedMonth.value,
-                                  controller.selectedYear.value,
-                                ),
-                              );
-                            }
-                          },
-                          underline: const SizedBox(),
-                        ),
-                      );
-                    }),
-
-                    // Month Dropdown
-                    Obx(() {
-                      return Container(
-                        height: 35,
-                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFF333333)),
-                          borderRadius: BorderRadius.circular(4.0),
-                        ),
-                        child: DropdownButton<int>(
-                          value: controller.selectedMonth.value,
-                          items: List.generate(_months.length, (index) {
-                            return DropdownMenuItem(
-                              value: index + 1,
-                              child: Text(_months[index].tr),
-                            );
-                          }),
-                          onChanged: (value) async {
-                            setState(() {
-                              controller.selectedMonth.value = value!;
-                            });
-                            if (controller.calenderModel.isNotEmpty) {
-                              getCurrectUserIdSpecific(
-                                controller.selectedRoomIndex.value,
-                                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                                DateUtilsx.getEndDateFromMonthAndYear(
-                                  controller.selectedMonth.value,
-                                  controller.selectedYear.value,
-                                ),
-                              );
-                            }
-                          },
-                          underline: const SizedBox(),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
                 Obx(
                   () => Row(
                     children: [
@@ -351,6 +240,125 @@ class _ReservationsScreenCopyState extends State<ReservationsScreenCopy> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Year, Month Dropdowns, and Today Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Today Button
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            // No need for _focusedDay in this screen
+                            controller.selectedYear.value = DateTime.now().year;
+                            controller.selectedMonth.value =
+                                DateTime.now().month;
+                          });
+                          if (controller.calenderModel.isNotEmpty) {
+                            getCurrectUserIdSpecific(
+                              controller.selectedRoomIndex.value,
+                              DateUtilsx.getStartDateOfMonth(),
+                              DateUtilsx.getEndDateOfMonth(),
+                            );
+                          }
+                        },
+                        child: Container(
+                          height: 35,
+                          width: 60,
+                          padding: const EdgeInsets.all(5.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFF333333)),
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: Center(
+                            child: Text(
+                              "Today".tr,
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Year Dropdown
+                      Obx(() {
+                        return Container(
+                          height: 35,
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFF333333)),
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: DropdownButton<int>(
+                            value: controller.selectedYear.value,
+                            items:
+                                _years.map((year) {
+                                  return DropdownMenuItem(
+                                    value: year,
+                                    child: Text(year.toString()),
+                                  );
+                                }).toList(),
+                            onChanged: (value) async {
+                              setState(() {
+                                controller.selectedYear.value = value!;
+                              });
+                              if (controller.calenderModel.isNotEmpty) {
+                                getCurrectUserIdSpecific(
+                                  controller.selectedRoomIndex.value,
+                                  "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                                  DateUtilsx.getEndDateFromMonthAndYear(
+                                    controller.selectedMonth.value,
+                                    controller.selectedYear.value,
+                                  ),
+                                );
+                              }
+                            },
+                            underline: const SizedBox(),
+                          ),
+                        );
+                      }),
+
+                      // Month Dropdown
+                      Obx(() {
+                        return Container(
+                          height: 35,
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFF333333)),
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: DropdownButton<int>(
+                            value: controller.selectedMonth.value,
+                            items: List.generate(_months.length, (index) {
+                              return DropdownMenuItem(
+                                value: index + 1,
+                                child: Text(_months[index].tr),
+                              );
+                            }),
+                            onChanged: (value) async {
+                              setState(() {
+                                controller.selectedMonth.value = value!;
+                              });
+                              if (controller.calenderModel.isNotEmpty) {
+                                getCurrectUserIdSpecific(
+                                  controller.selectedRoomIndex.value,
+                                  "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                                  DateUtilsx.getEndDateFromMonthAndYear(
+                                    controller.selectedMonth.value,
+                                    controller.selectedYear.value,
+                                  ),
+                                );
+                              }
+                            },
+                            underline: const SizedBox(),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+
                 const SizedBox(height: 8),
                 // Use Obx to react to changes in isLoading, isRoomLoading, and reservationModel
                 Obx(() {

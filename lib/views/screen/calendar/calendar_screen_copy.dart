@@ -230,7 +230,9 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                                 },
                                 child: Obx(() {
                                   return Container(
-                                    margin: const EdgeInsets.all(5),
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 5,
+                                    ),
                                     padding: const EdgeInsets.all(5),
                                     decoration: BoxDecoration(
                                       color:
@@ -273,11 +275,11 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                     ),
                   ],
                 ),
-                SizedBox(height: 25.h),
+                SizedBox(height: 16.h),
 
                 // Year, Month Dropdowns, and Today Button
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Today Button
                     InkWell(
@@ -304,7 +306,12 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                           border: Border.all(color: const Color(0xFF333333)),
                           borderRadius: BorderRadius.circular(4.0),
                         ),
-                        child: Center(child: Text("Today".tr)),
+                        child: Center(
+                          child: Text(
+                            "Today".tr,
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ),
                       ),
                     ),
 
