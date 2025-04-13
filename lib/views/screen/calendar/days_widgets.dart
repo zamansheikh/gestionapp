@@ -59,7 +59,6 @@ List<Widget> buildCalendarDays({
         //! Check Booking Status
         if (DateUtilsx.areDatesEqual(customDate, roomBookStartList[i])) {
           //! A Date is Matching with [Start Date]
-
           if (DateUtilsx.isDateBetween(
             currentDate,
             roomBookStartList[i],
@@ -150,7 +149,7 @@ List<Widget> buildCalendarDays({
               if (DateUtilsx.isDatePast(roomBookStartList[i + 1])) {
                 bstatus = BookingStatus.pastRunning;
               } else if (DateUtilsx.isDateRunning(
-                //! TODO: Here some changes are required
+                //! Here some changes are required
                 roomBookEndList[i],
                 roomBookStartList[i + 1],
               )) {
@@ -248,11 +247,11 @@ List<Widget> buildCalendarDays({
             bstatus = BookingStatus.past;
           }
         } else {
-          if (day == DateTime.now().day &&
-              selectedMonth == DateTime.now().month &&
-              selectedYear == DateTime.now().year) {
-            bstatus = BookingStatus.today;
-          }
+          // if (day == DateTime.now().day &&
+          //     selectedMonth == DateTime.now().month &&
+          //     selectedYear == DateTime.now().year) {
+          //   bstatus = BookingStatus.today;
+          // }
         }
       }
     }

@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gestionapp/controllers/cred_controller.dart';
 import 'package:gestionapp/views/screen/admin/admin_profile_screen.dart';
-import 'package:gestionapp/views/screen/calendar/calendar_screen_copy.dart';
+import 'package:gestionapp/views/screen/calendar/calendar_screen.dart';
 // import 'package:gestionapp/views/screen/calendar/calendar_screen.dart';
 import 'package:gestionapp/views/screen/profile/profile_screen.dart';
 import 'package:gestionapp/views/screen/reservation/reservation_screen_copy.dart';
@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
         return IndexedStack(
           index: credController.navIndex.value,
           children: [
-            const CalenderScreenCopy(),
+            const CalenderScreen(),
             const ReservationsScreenCopy(),
             const RegisterScreenCopy(),
             if (credController.userRole.value == 'admin')

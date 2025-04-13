@@ -16,9 +16,8 @@ class CalenderScreen extends StatefulWidget {
 }
 
 class _CalenderScreenState extends State<CalenderScreen> {
-  int _selectedRoomIndex = 0;
   DateTime _focusedDay = DateTime.now();
-  final _currentDate = DateTime.now();
+  var currentDate = DateTime.now();
   final List<int> _years = List.generate(
     7,
     (index) => DateTime.now().year - 3 + index,
@@ -38,19 +37,40 @@ class _CalenderScreenState extends State<CalenderScreen> {
     'December',
   ];
 
-  final CalendarController controller = Get.put(CalendarController());
+  void resetButton() {
+    setState(() {
+      controller.selectedRoomIndex.value = 0;
+      _isLoading = false;
+      _isRoomLoading = false;
+    });
+  }
 
-  bool _isLoading = false;
+  // final CalendarController controller = Get.put(CalendarController());
+  late final CalendarController controller;
+
+  bool _isLoading = false; // Initial load
+  bool _isRoomLoading = false; // Room change loading
 
   @override
   void initState() {
     super.initState();
+    if (!Get.isRegistered<CalendarController>()) {
+      controller = Get.put(CalendarController());
+    } else {
+      controller = Get.find<CalendarController>();
+    }
     getCurrectUserId();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   getCurrectUserId() async {
     setState(() {
       _isLoading = true;
+      currentDate = DateTime.now();
     });
     final userID = await PrefsHelper.getString(AppConstants.user);
     await controller.calendarReserve(id: userID);
@@ -59,6 +79,11 @@ class _CalenderScreenState extends State<CalenderScreen> {
       "Room available and found first ID: ${controller.calenderModel.first.id!}"
           .logW();
       await controller.reservationProperty(
+        id: controller.calenderModel.first.id!,
+        startDate: DateUtilsx.getStartDateOfMonth(),
+        endDate: DateUtilsx.getEndDateOfMonth(),
+      );
+      await controller.reservationPropertylog(
         id: controller.calenderModel.first.id!,
         startDate: DateUtilsx.getStartDateOfMonth(),
         endDate: DateUtilsx.getEndDateOfMonth(),
@@ -79,10 +104,11 @@ class _CalenderScreenState extends State<CalenderScreen> {
     String endDate,
   ) async {
     setState(() {
-      _isLoading = true;
+      _isRoomLoading = true; // Room-specific loading starts
+      currentDate = DateTime.now();
     });
     final userID = await PrefsHelper.getString(AppConstants.user);
-    await controller.calendarReserve(id: userID);
+    // await controller.calendarReserve(id: userID); // No need to call again.
     if (controller.calenderModel.isNotEmpty) {
       "Logged in User ID: $userID".logW();
       "Room available for${controller.calenderModel[rcvIndex].id!}".logW();
@@ -91,12 +117,17 @@ class _CalenderScreenState extends State<CalenderScreen> {
         startDate: startDate,
         endDate: endDate,
       );
+      await controller.reservationPropertylog(
+        id: controller.calenderModel[rcvIndex].id!,
+        startDate: startDate,
+        endDate: endDate,
+      );
       setState(() {
-        _isLoading = false;
+        _isRoomLoading = false; // Room loading finished
       });
     } else {
       setState(() {
-        _isLoading = false;
+        _isRoomLoading = false;
       });
     }
   }
@@ -113,197 +144,83 @@ class _CalenderScreenState extends State<CalenderScreen> {
           children: [
             SizedBox(height: 24.h),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const SizedBox(width: 24),
+                const SizedBox(width: 24), // Padding on the left
                 Image.asset('assets/images/splash.png', width: 70.w),
-                Spacer(),
-                Text('Calendar'.tr, style: TextStyle(fontSize: 20.sp)),
-                Spacer(),
-                const SizedBox(width: 94),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'Calendar'.tr,
+                      style: TextStyle(fontSize: 20.sp),
+                    ),
+                  ),
+                ),
+                // You can add the IconButton here if needed
+                SizedBox(width: 94.w), // Padding on the right
               ],
             ),
           ],
         ),
       ),
-      body:
-          (_isLoading)
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                onRefresh: () async {
-                  if (controller.calenderModel.isNotEmpty) {
-                    "Room available and found for Room- : ${controller.calenderModel[_selectedRoomIndex].roomName}"
-                        .logW();
-                    getCurrectUserIdSpecific(
-                      _selectedRoomIndex,
-                      "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                      DateUtilsx.getEndDateFromMonthAndYear(
-                        controller.selectedMonth.value,
-                        controller.selectedYear.value,
-                      ),
-                    );
-                  }
-                },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 16.h,
-                    horizontal: 30.w,
-                  ),
-                  child: Obx(() {
-                    if (controller.calenderModel.isEmpty) {
-                      return Center(
-                        child: Text(
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20),
-                          'You have no reservation! Please contact with admin'
-                              .tr,
-                        ),
-                      );
-                    }
-                    return Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: 50,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: controller.calenderModel.length,
-                                  itemBuilder: (context, index) {
-                                    return InkWell(
-                                      onTap: () async {
-                                        setState(() {
-                                          _selectedRoomIndex = index;
-                                        });
 
-                                        //Call API of ROOM HERE
-                                        if (controller
-                                            .calenderModel
-                                            .isNotEmpty) {
-                                          "Room available and found for Room- : ${controller.calenderModel[index].roomName}"
-                                              .logW();
-                                          getCurrectUserIdSpecific(
-                                            index,
-                                            "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                                            DateUtilsx.getEndDateFromMonthAndYear(
-                                              controller.selectedMonth.value,
-                                              controller.selectedYear.value,
-                                            ),
-                                          );
-                                        }
-                                        setState(() {});
-                                      },
-                                      child: Container(
-                                        margin: const EdgeInsets.all(5),
-                                        padding: const EdgeInsets.all(5),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              _selectedRoomIndex == index
-                                                  ? const Color(0xFFD80665)
-                                                  : const Color(0xFFE6E6E6),
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.black,
-                                            width: .5,
-                                          ),
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10.0,
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              '${controller.calenderModel[index].roomName}',
-                                              style: TextStyle(
-                                                color:
-                                                    _selectedRoomIndex == index
-                                                        ? Colors.white
-                                                        : Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 25.h),
-                        // Year, Month Dropdowns, and Today Button
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            // Today Button
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _focusedDay = DateTime.now();
-                                  controller.selectedYear.value =
-                                      DateTime.now().year;
-                                  controller.selectedMonth.value =
-                                      DateTime.now().month;
-                                });
-                                if (controller.calenderModel.isNotEmpty) {
-                                  getCurrectUserIdSpecific(
-                                    _selectedRoomIndex,
-                                    DateUtilsx.getStartDateOfMonth(),
-                                    DateUtilsx.getEndDateOfMonth(),
-                                  );
-                                }
-                              },
-                              child: Container(
-                                height: 35,
-                                width: 60,
-                                padding: const EdgeInsets.all(5.0),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: const Color(0xFF333333),
-                                  ),
-                                  borderRadius: BorderRadius.circular(4.0),
-                                ),
-                                child: Center(child: Text("Today".tr)),
-                              ),
-                            ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Simplified refresh: just update for the selected room and dates
+          if (controller.calenderModel.isNotEmpty) {
+            getCurrectUserIdSpecific(
+              controller.selectedRoomIndex.value,
+              "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+              DateUtilsx.getEndDateFromMonthAndYear(
+                controller.selectedMonth.value,
+                controller.selectedYear.value,
+              ),
+            );
+          } else {
+            getCurrectUserId(); // Refresh all data if empty
+          }
+        },
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 30.w),
+          child: Obx(() {
+            // Initial loading
+            if (_isLoading.obs.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                            // Year Dropdown
-                            Container(
-                              height: 35,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5.0,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFF333333),
-                                ),
-                                borderRadius: BorderRadius.circular(4.0),
-                              ),
-                              child: DropdownButton<int>(
-                                value: controller.selectedYear.value,
-                                items:
-                                    _years.map((year) {
-                                      return DropdownMenuItem(
-                                        value: year,
-                                        child: Text(year.toString()),
-                                      );
-                                    }).toList(),
-                                onChanged: (value) async {
+            // Handle empty state
+            if (controller.calenderModel.isEmpty) {
+              return Center(
+                child: Text(
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 20),
+                  'You have no reservation! Please contact with admin'.tr,
+                ),
+              );
+            }
+
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: Obx(
+                          () => ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: controller.calenderModel.length,
+                            itemBuilder: (context, index) {
+                              return InkWell(
+                                onTap: () async {
                                   setState(() {
-                                    controller.selectedYear.value = value!;
-                                    _focusedDay = DateTime(
-                                      controller.selectedYear.value,
-                                      controller.selectedMonth.value,
-                                    );
+                                    controller.selectedRoomIndex.value = index;
                                   });
+
+                                  // Only call getCurrectUserIdSpecific, which sets _isRoomLoading.
                                   if (controller.calenderModel.isNotEmpty) {
-                                    "Room available and found for Room- : ${controller.calenderModel[_selectedRoomIndex].roomName}"
-                                        .logW();
                                     getCurrectUserIdSpecific(
-                                      _selectedRoomIndex,
+                                      index,
                                       "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
                                       DateUtilsx.getEndDateFromMonthAndYear(
                                         controller.selectedMonth.value,
@@ -312,160 +229,332 @@ class _CalenderScreenState extends State<CalenderScreen> {
                                     );
                                   }
                                 },
-                                underline: const SizedBox(),
-                              ),
-                            ),
-
-                            // Month Dropdown
-                            Container(
-                              height: 35,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5.0,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFF333333),
-                                ),
-                                borderRadius: BorderRadius.circular(4.0),
-                              ),
-                              child: DropdownButton<int>(
-                                value: controller.selectedMonth.value,
-                                items: List.generate(_months.length, (index) {
-                                  return DropdownMenuItem(
-                                    value: index + 1,
-                                    child: Text(_months[index].tr),
+                                child: Obx(() {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 5,
+                                      ),
+                                      padding: const EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            controller
+                                                        .selectedRoomIndex
+                                                        .value ==
+                                                    index
+                                                ? const Color(0xFFD80665)
+                                                : const Color(0xFFE6E6E6),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                          color: Colors.black,
+                                          width: .5,
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10.0,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${controller.calenderModel[index].roomName}',
+                                            style: TextStyle(
+                                              color:
+                                                  controller
+                                                              .selectedRoomIndex
+                                                              .value ==
+                                                          index
+                                                      ? Colors.white
+                                                      : Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   );
                                 }),
-                                onChanged: (value) async {
-                                  setState(() {
-                                    controller.selectedMonth.value = value!;
-                                    _focusedDay = DateTime(
-                                      controller.selectedYear.value,
-                                      controller.selectedMonth.value,
-                                    );
-                                  });
-                                  if (controller.calenderModel.isNotEmpty) {
-                                    "Room available: ${controller.calenderModel[_selectedRoomIndex].roomName}"
-                                        .logW();
-                                    getCurrectUserIdSpecific(
-                                      _selectedRoomIndex,
-                                      "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                                      DateUtilsx.getEndDateFromMonthAndYear(
-                                        controller.selectedMonth.value,
-                                        controller.selectedYear.value,
-                                      ),
-                                    );
-                                  }
-                                },
-                                underline: const SizedBox(),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        // Days of the week row
-                        Container(
-                          height: 40,
-                          decoration: const BoxDecoration(
-                            color: Color(0xffF2F5F7),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                'Mon'.tr,
-                                style: const TextStyle(
-                                  color: Color(0xFF333333),
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Tue'.tr,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF333333),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Wed'.tr,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF333333),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Thu'.tr,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF333333),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Fri'.tr,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF333333),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Sat'.tr,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF333333),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Sun'.tr,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                              );
+                            },
                           ),
                         ),
-
-                        // Calendar Grid
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                              vertical: 8,
-                            ),
-                            child: Container(
-                              decoration: const BoxDecoration(),
-                              child: GridView.count(
-                                crossAxisSpacing: 4.0,
-                                mainAxisSpacing: 2.0,
-                                crossAxisCount: 7,
-                                children: buildCalendarDays(
-                                  dateToday: _currentDate,
-                                  date: firstDayOfMonth,
-                                  controller: controller,
-                                  selectedMonth: controller.selectedMonth.value,
-                                  selectedYear: controller.selectedYear.value,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        // Events Section
-                        const SizedBox(height: 8.0),
-                      ],
-                    );
-                  }),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                SizedBox(height: 16.h),
+
+                // Year, Month Dropdowns, and Today Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Today Button
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _focusedDay = DateTime.now();
+                          controller.selectedYear.value = DateTime.now().year;
+                          controller.selectedMonth.value = DateTime.now().month;
+                        });
+                        // Call getCurrectUserIdSpecific for updated dates
+                        if (controller.calenderModel.isNotEmpty) {
+                          getCurrectUserIdSpecific(
+                            controller.selectedRoomIndex.value,
+                            DateUtilsx.getStartDateOfMonth(),
+                            DateUtilsx.getEndDateOfMonth(),
+                          );
+                        }
+                      },
+                      child: Container(
+                        height: 35,
+                        width: 60,
+                        padding: const EdgeInsets.all(5.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFF333333)),
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                        child: Center(
+                          child: Text(
+                            "Today".tr,
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Year Dropdown
+                    Obx(() {
+                      return Container(
+                        height: 35,
+                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFF333333)),
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                        child: DropdownButton<int>(
+                          value: controller.selectedYear.value,
+                          items:
+                              _years.map((year) {
+                                return DropdownMenuItem(
+                                  value: year,
+                                  child: Text(year.toString()),
+                                );
+                              }).toList(),
+                          onChanged: (value) async {
+                            setState(() {
+                              controller.selectedYear.value = value!;
+                              _focusedDay = DateTime(
+                                controller.selectedYear.value,
+                                controller.selectedMonth.value,
+                              );
+                            });
+                            // Call getCurrectUserIdSpecific for updated year
+                            if (controller.calenderModel.isNotEmpty) {
+                              getCurrectUserIdSpecific(
+                                controller.selectedRoomIndex.value,
+                                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                                DateUtilsx.getEndDateFromMonthAndYear(
+                                  controller.selectedMonth.value,
+                                  controller.selectedYear.value,
+                                ),
+                              );
+                            }
+                          },
+                          underline: const SizedBox(),
+                        ),
+                      );
+                    }),
+
+                    // Month Dropdown
+                    Obx(() {
+                      return Container(
+                        height: 35,
+                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFF333333)),
+                          borderRadius: BorderRadius.circular(4.0),
+                        ),
+                        child: DropdownButton<int>(
+                          value: controller.selectedMonth.value,
+                          items: List.generate(_months.length, (index) {
+                            return DropdownMenuItem(
+                              value: index + 1,
+                              child: Text(_months[index].tr),
+                            );
+                          }),
+                          onChanged: (value) async {
+                            setState(() {
+                              controller.selectedMonth.value = value!;
+                              _focusedDay = DateTime(
+                                controller.selectedYear.value,
+                                controller.selectedMonth.value,
+                              );
+                            });
+                            // Call getCurrectUserIdSpecific for updated month
+                            if (controller.calenderModel.isNotEmpty) {
+                              getCurrectUserIdSpecific(
+                                controller.selectedRoomIndex.value,
+                                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                                DateUtilsx.getEndDateFromMonthAndYear(
+                                  controller.selectedMonth.value,
+                                  controller.selectedYear.value,
+                                ),
+                              );
+                            }
+                          },
+                          underline: const SizedBox(),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Days of the week row
+                Container(
+                  height: 40,
+                  decoration: const BoxDecoration(color: Color(0xffF2F5F7)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Text(
+                        'Mon'.tr,
+                        style: const TextStyle(
+                          color: Color(0xFF333333),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Tue'.tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFF333333),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Wed'.tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFF333333),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Thu'.tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFF333333),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Fri'.tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFF333333),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Sat'.tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFF333333),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Sun'.tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Calendar Grid (Use Expanded to fill remaining space)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 8,
+                    ),
+                    child:
+                        _isRoomLoading // Conditionally show loading indicator
+                            ? const Center(child: CircularProgressIndicator())
+                            : GridView.count(
+                              crossAxisSpacing: 3.0,
+                              mainAxisSpacing: 3.0,
+                              crossAxisCount: 7,
+                              children: buildCalendarDays(
+                                dateToday: currentDate,
+                                date: firstDayOfMonth,
+                                controller: controller,
+                                selectedMonth: controller.selectedMonth.value,
+                                selectedYear: controller.selectedYear.value,
+                              ),
+                            ),
+                  ),
+                ),
+                const SizedBox(height: 4.0),
+                // Events Section
+                Column(
+                  // REMOVE Expanded here
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'KEY'.tr,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    cellIndicator(Color(0xFF6A6A6A), "Past reservation".tr),
+                    cellIndicator(Color(0xFFD80665), "Current Reservation".tr),
+                    cellIndicator(Color(0xFFFFACA5), "Comming Reservation".tr),
+                    cellIndicator(Color(0xff5092F9), "Today".tr),
+                    cellIndicator(Color(0xffffffff), "Free".tr),
+                  ],
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget cellIndicator(Color color, String name) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            height: 16,
+            width: 16,
+            padding: const EdgeInsets.all(10),
+            margin: const EdgeInsets.only(top: 2, left: 8, bottom: 2),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black),
+
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(name, style: const TextStyle(fontSize: 14)),
+        ],
+      ),
     );
   }
 }
