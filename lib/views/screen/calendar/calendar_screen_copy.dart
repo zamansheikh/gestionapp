@@ -144,25 +144,26 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
           children: [
             SizedBox(height: 24.h),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const SizedBox(width: 24),
+                const SizedBox(width: 24), // Padding on the left
                 Image.asset('assets/images/splash.png', width: 70.w),
-                SizedBox(width: 55.w),
-                Text('Calendar'.tr, style: TextStyle(fontSize: 20.sp)),
-                Spacer(),
-                // IconButton(
-                //   onPressed: () {
-                //     resetButton();
-                //     getCurrectUserId();
-                //   },
-                //   icon: Icon(Icons.refresh, color: Colors.black),
-                // ),
-                const SizedBox(width: 24),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'Calendar'.tr,
+                      style: TextStyle(fontSize: 20.sp),
+                    ),
+                  ),
+                ),
+                // You can add the IconButton here if needed
+                SizedBox(width: 94.w), // Padding on the right
               ],
             ),
           ],
         ),
       ),
+
       body: RefreshIndicator(
         onRefresh: () async {
           // Simplified refresh: just update for the selected room and dates
@@ -229,38 +230,43 @@ class _CalenderScreenCopyState extends State<CalenderScreenCopy> {
                                   }
                                 },
                                 child: Obx(() {
-                                  return Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      vertical: 5,
-                                    ),
-                                    padding: const EdgeInsets.all(5),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          controller.selectedRoomIndex.value ==
-                                                  index
-                                              ? const Color(0xFFD80665)
-                                              : const Color(0xFFE6E6E6),
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: Colors.black,
-                                        width: .5,
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 5,
                                       ),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10.0,
+                                      padding: const EdgeInsets.all(5),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            controller
+                                                        .selectedRoomIndex
+                                                        .value ==
+                                                    index
+                                                ? const Color(0xFFD80665)
+                                                : const Color(0xFFE6E6E6),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                          color: Colors.black,
+                                          width: .5,
+                                        ),
                                       ),
-                                      child: Center(
-                                        child: Text(
-                                          '${controller.calenderModel[index].roomName}',
-                                          style: TextStyle(
-                                            color:
-                                                controller
-                                                            .selectedRoomIndex
-                                                            .value ==
-                                                        index
-                                                    ? Colors.white
-                                                    : Colors.black,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10.0,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${controller.calenderModel[index].roomName}',
+                                            style: TextStyle(
+                                              color:
+                                                  controller
+                                                              .selectedRoomIndex
+                                                              .value ==
+                                                          index
+                                                      ? Colors.white
+                                                      : Colors.black,
+                                            ),
                                           ),
                                         ),
                                       ),

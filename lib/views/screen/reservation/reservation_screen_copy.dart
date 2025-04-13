@@ -129,20 +129,20 @@ class _ReservationsScreenCopyState extends State<ReservationsScreenCopy> {
           children: [
             SizedBox(height: 24.h),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const SizedBox(width: 24),
+                const SizedBox(width: 24), // Padding on the left
                 Image.asset('assets/images/splash.png', width: 70.w),
-                SizedBox(width: 50.w),
-                Text('Reservation'.tr, style: TextStyle(fontSize: 20.sp)),
-                Spacer(),
-                // IconButton(
-                //   onPressed: () {
-                //     resetButton();
-                //     getCurrectUserId();
-                //   },
-                //   icon: Icon(Icons.refresh, color: Colors.black),
-                // ),
-                const SizedBox(width: 24),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'Reservation'.tr,
+                      style: TextStyle(fontSize: 20.sp),
+                    ),
+                  ),
+                ),
+                // You can add the IconButton here if needed
+                SizedBox(width: 94.w), // Padding on the right
               ],
             ),
           ],
