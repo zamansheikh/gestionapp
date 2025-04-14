@@ -7,6 +7,7 @@ import 'package:gestionapp/helpers/firebase_notification_service.dart';
 import 'package:gestionapp/routes/routes.dart';
 import 'package:gestionapp/themes/light_theme.dart';
 import 'package:gestionapp/utils/app_constants.dart';
+import 'package:gestionapp/utils/loading_controller.dart';
 import 'package:gestionapp/utils/message.dart';
 import 'package:get/get.dart';
 import 'helpers/di.dart' as di;
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
   final Map<String, Map<String, String>> languages;
   @override
   Widget build(BuildContext context) {
+    Get.put(LoadingController());
     return ScreenUtilInit(
       designSize: const Size(393, 852),
       minTextAdapt: true,
@@ -47,6 +49,26 @@ class MyApp extends StatelessWidget {
           transitionDuration: const Duration(milliseconds: 500),
           getPages: AppRoutes.routes,
           initialRoute: AppRoutes.splashScreen,
+          builder: (context, widget) {
+            return Stack(
+              children: [
+                widget!,
+                GetX<LoadingController>(
+                  init: LoadingController(),
+                  builder:
+                      (controller) =>
+                          controller.isLoading.value
+                              ? Container(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                              : const SizedBox.shrink(),
+                ),
+              ],
+            );
+          },
         );
       },
     );
