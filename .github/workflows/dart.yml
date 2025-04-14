@@ -30,14 +30,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --release
+      # - name: Build APK
+      #   run: flutter build apk --release
 
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Release v1.0.${{ github.run_number }}
-          files: build/app/outputs/flutter-apk/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Upload Release Asset
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: v1.0.${{ github.run_number }}
+      #     name: Release v1.0.${{ github.run_number }}
+      #     files: build/app/outputs/flutter-apk/app-release.apk
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
