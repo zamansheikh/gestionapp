@@ -290,9 +290,15 @@ List<Widget> buildCalendarDays({
           children: [
             CalendarCell(status: BookingStatus.none, dayNumber: day),
 
-            if (isToday(day))
+            if (isToday(day) && getBookingStatus(day) != BookingStatus.none)
               overlay.CalenderCellOverlay(
                 status: getBookingStatus(day),
+                dayNumber: day,
+              )
+            else if (isToday(day) &&
+                getBookingStatus(day) == BookingStatus.none)
+              overlay.CalenderCellOverlay(
+                status: BookingStatus.today,
                 dayNumber: day,
               ),
           ],
