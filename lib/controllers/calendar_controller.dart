@@ -4,6 +4,7 @@ import 'package:gestionapp/helpers/prefs_helper.dart';
 import 'package:gestionapp/models/calender_model.dart';
 import 'package:gestionapp/models/reservation_model.dart';
 import 'package:gestionapp/utils/app_constants.dart';
+import 'package:gestionapp/utils/loading_controller.dart';
 import 'package:get/get.dart';
 
 import '../services/api_checker.dart';
@@ -36,6 +37,7 @@ class CalendarController extends GetxController {
 
   calendarReserve({String id = ''}) async {
     calendarLoading(true);
+    LoadingController.to.showLoading();
     var response = await ApiClient.getData(ApiConstants.getPropertyById(id));
     if (response.statusCode == 200) {
       var data = response.body["data"];
@@ -48,8 +50,9 @@ class CalendarController extends GetxController {
         "Something wrong".logE();
       }
       calendarLoading(false);
+      LoadingController.to.hideLoading();
     } else {
-      calendarLoading(false);
+      LoadingController.to.hideLoading();
       ApiChecker.checkApi(response);
     }
     update();
@@ -63,6 +66,7 @@ class CalendarController extends GetxController {
     String endDate = '',
   }) async {
     reservationLoading(true);
+    LoadingController.to.showLoading();
     var response = await ApiClient.getData(
       ApiConstants.reservationProperty(id, startDate, endDate),
     );
@@ -84,8 +88,10 @@ class CalendarController extends GetxController {
         e.toString().logE();
       }
       reservationLoading(false);
+      LoadingController.to.hideLoading();
     } else {
       reservationLoading(false);
+      LoadingController.to.hideLoading();
       ApiChecker.checkApi(response);
     }
   }
@@ -97,6 +103,7 @@ class CalendarController extends GetxController {
     String endDate = '',
   }) async {
     reservationLoading(true);
+    LoadingController.to.showLoading();
     var response = await ApiClient.getData(
       ApiConstants.reservationPropertyLog(id, startDate, endDate),
     );
@@ -118,8 +125,10 @@ class CalendarController extends GetxController {
         e.toString().logE();
       }
       reservationLoading(false);
+      LoadingController.to.hideLoading();
     } else {
       reservationLoading(false);
+      LoadingController.to.hideLoading();
       ApiChecker.checkApi(response);
     }
   }

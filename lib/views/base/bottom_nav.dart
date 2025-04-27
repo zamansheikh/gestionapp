@@ -6,9 +6,9 @@ import 'package:gestionapp/views/screen/admin/admin_profile_screen.dart';
 import 'package:gestionapp/views/screen/calendar/calendar_screen.dart';
 // import 'package:gestionapp/views/screen/calendar/calendar_screen.dart';
 import 'package:gestionapp/views/screen/profile/profile_screen.dart';
-import 'package:gestionapp/views/screen/reservation/reservation_screen_copy.dart';
+import 'package:gestionapp/views/screen/reservation/reservation_screen.dart';
 // import 'package:gestionapp/views/screen/reservation/reservation_screen.dart';
-import 'package:gestionapp/views/screen/reservation/resgister_screen_copy.dart';
+import 'package:gestionapp/views/screen/reservation/resgister_screen.dart';
 // import 'package:gestionapp/views/screen/reservation/resgister_screen.dart';
 import 'package:get/get.dart';
 import '../../utils/app_icons.dart';
@@ -108,8 +108,8 @@ class _HomePageState extends State<HomePage> {
           index: credController.navIndex.value,
           children: [
             const CalenderScreen(),
-            const ReservationsScreenCopy(),
-            const RegisterScreenCopy(),
+            const ReservationsScreen(),
+            const RegisterScreen(),
             if (credController.userRole.value == 'admin')
               const AdminProfileScreen(),
             if (credController.userRole.value == 'user') const ProfileScreen(),

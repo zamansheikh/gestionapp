@@ -185,7 +185,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
           child: Obx(() {
             // Initial loading
             if (_isLoading.obs.value) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: SizedBox());
             }
 
             // Handle empty state
@@ -484,7 +484,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                     ),
                     child:
                         _isRoomLoading // Conditionally show loading indicator
-                            ? const Center(child: CircularProgressIndicator())
+                            ? const Center(child: SizedBox())
                             : GridView.count(
                               crossAxisSpacing: 3.0,
                               mainAxisSpacing: 3.0,

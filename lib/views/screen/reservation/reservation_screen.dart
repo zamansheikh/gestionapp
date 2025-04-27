@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gestionapp/controllers/calendar_controller.dart';
 import 'package:gestionapp/controllers/cred_controller.dart';
-import 'package:gestionapp/controllers/reservation_controller.dart';
 import 'package:gestionapp/helpers/logger.dart';
 import 'package:gestionapp/models/reservation_model.dart';
 import 'package:gestionapp/views/screen/reservation/reservation_detail_screen.dart';
@@ -19,11 +19,21 @@ class ReservationsScreen extends StatefulWidget {
 
 class _ReservationsScreenState extends State<ReservationsScreen> {
   final CredController credController = Get.put(CredController());
-  int _selectedRoomIndex = 0;
-  RxBool isAnyRoomAvailable = false.obs;
-  bool _isLoading = false;
-  final ReservationController controller = Get.put(ReservationController());
-  // DateTime _focusedDay = DateTime.now();
+  final RxBool isAnyRoomAvailable = false.obs; // No need for this to be RxBool
+  bool _isLoading = false; // Initial loading
+  bool _isRoomLoading =
+      false; // Loading indicator for when changing room selection
+  final CalendarController controller = Get.put(CalendarController());
+
+  // DateTime _focusedDay = DateTime.now();  // Not used in this screen
+  void resetButton() {
+    setState(() {
+      controller.selectedRoomIndex.value = 0;
+      _isLoading = false;
+      _isRoomLoading = false;
+      isAnyRoomAvailable.value = false;
+    });
+  }
 
   final List<int> _years = List.generate(
     7,
@@ -47,50 +57,35 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
   @override
   void initState() {
     super.initState();
-    getCurrectUserId();
+    // getCurrectUserId();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   getCurrectUserId() async {
     setState(() {
-      _isLoading = true;
+      _isLoading = true; // Initial load
     });
     final userID = await PrefsHelper.getString(AppConstants.user);
     await controller.calendarReserve(id: userID);
-    if (credController.userRole.value == 'admin') {
-      if (controller.calenderModel.isNotEmpty) {
-        "Logged in User ID: $userID".logW();
-        "RoomID: ${controller.calenderModel.first.id!}".logW();
-        await controller.reservationProperty(
-          id: controller.calenderModel.first.id!,
-          startDate: DateUtilsx.getStartDateOfMonth(),
-          endDate: DateUtilsx.getEndDateOfMonth(),
-        );
-        setState(() {
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } else {
-      if (controller.calenderModel.isNotEmpty) {
-        "Logged in User ID: $userID".logW();
-        "RoomID: ${controller.calenderModel.first.id!}".logW();
-        await controller.reservationProperty(
-          id: controller.calenderModel.first.id!,
-          startDate: DateUtilsx.getStartDateOfMonth(),
-          endDate: DateUtilsx.getEndDateOfMonth(),
-        );
-        setState(() {
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+
+    // Simplify: The logic is the same for admin and non-admin users.
+    if (controller.calenderModel.isNotEmpty) {
+      "Logged in User ID: $userID".logW();
+      "RoomID: ${controller.calenderModel.first.id!}".logW();
+      await controller.reservationProperty(
+        id: controller.calenderModel.first.id!,
+        startDate: DateUtilsx.getStartDateOfMonth(),
+        endDate: DateUtilsx.getEndDateOfMonth(),
+      );
     }
+
+    setState(() {
+      _isLoading = false; // Initial loading done.
+    });
   }
 
   getCurrectUserIdSpecific(
@@ -99,10 +94,10 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
     String endDate,
   ) async {
     setState(() {
-      _isLoading = true;
+      _isRoomLoading = true; // Room-specific loading starts.
     });
     final userID = await PrefsHelper.getString(AppConstants.user);
-    await controller.calendarReserve(id: userID);
+    // No need to call calendarReserve again. We already have the room data.
     if (controller.calenderModel.isNotEmpty) {
       "Logged in User ID: $userID".logW();
       "Room available for ROOM: ${controller.calenderModel[rcvIndex].id!}"
@@ -112,14 +107,16 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
         startDate: startDate,
         endDate: endDate,
       );
-      setState(() {
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
+      await controller.reservationPropertylog(
+        id: controller.calenderModel[rcvIndex].id!,
+        startDate: startDate,
+        endDate: endDate,
+      );
     }
+    setState(() {
+      _isRoomLoading =
+          false; // Room-specific loading is done (regardless of success/failure)
+    });
   }
 
   @override
@@ -132,13 +129,20 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
           children: [
             SizedBox(height: 24.h),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                const SizedBox(width: 24),
+                const SizedBox(width: 24), // Padding on the left
                 Image.asset('assets/images/splash.png', width: 70.w),
-                Spacer(),
-                Text('Reservation'.tr, style: TextStyle(fontSize: 20.sp)),
-                Spacer(),
-                const SizedBox(width: 94),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'Reservation'.tr,
+                      style: TextStyle(fontSize: 20.sp),
+                    ),
+                  ),
+                ),
+                // You can add the IconButton here if needed
+                SizedBox(width: 94.w), // Padding on the right
               ],
             ),
           ],
@@ -147,114 +151,42 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
+            // Simplified refresh logic: No role check, always refresh for the selected room
             if (controller.calenderModel.isNotEmpty) {
-              "Room available and found for Room- : ${controller.calenderModel[_selectedRoomIndex].roomName}"
-                  .logW();
-              if (credController.userRole.value == 'admin') {
-                // getCurrectUserIdSpecific(
-                //   index,
-                //   "01/${controller.fixedMonthStart}/${controller.fixedYearStart}",
-                //   DateUtilsx
-                //       .getEndDateFromMonthAndYear(
-                //           controller.fixedMonthEnd,
-                //           controller.fixedYearEnd),
-                // );
-                getCurrectUserIdSpecific(
-                  _selectedRoomIndex,
-                  "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                  DateUtilsx.getEndDateFromMonthAndYear(
-                    controller.selectedMonth.value,
-                    controller.selectedYear.value,
-                  ),
-                );
-              } else {
-                getCurrectUserIdSpecific(
-                  _selectedRoomIndex,
-                  "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                  DateUtilsx.getEndDateFromMonthAndYear(
-                    controller.selectedMonth.value,
-                    controller.selectedYear.value,
-                  ),
-                );
-              }
+              getCurrectUserIdSpecific(
+                controller.selectedRoomIndex.value,
+                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                DateUtilsx.getEndDateFromMonthAndYear(
+                  controller.selectedMonth.value,
+                  controller.selectedYear.value,
+                ),
+              );
             }
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child:
-                (_isLoading)
-                    ? const Center(child: CircularProgressIndicator())
-                    : Column(
-                      children: [
-                        // Year, Month Dropdowns, and Today Button
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            // Today Button
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  controller.selectedYear.value =
-                                      DateTime.now().year;
-                                  controller.selectedMonth.value =
-                                      DateTime.now().month;
-                                });
-                                if (controller.calenderModel.isNotEmpty) {
-                                  getCurrectUserIdSpecific(
-                                    _selectedRoomIndex,
-                                    DateUtilsx.getStartDateOfMonth(),
-                                    DateUtilsx.getEndDateOfMonth(),
-                                  );
-                                }
-                              },
-                              child: Container(
-                                height: 35,
-                                width: 60,
-                                padding: const EdgeInsets.all(5.0),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: const Color(0xFF333333),
-                                  ),
-                                  borderRadius: BorderRadius.circular(4.0),
-                                ),
-                                child: Center(child: Text("Today".tr)),
-                              ),
-                            ),
-
-                            // Year Dropdown
-                            Container(
-                              height: 35,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5.0,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFF333333),
-                                ),
-                                borderRadius: BorderRadius.circular(4.0),
-                              ),
-                              child: DropdownButton<int>(
-                                value: controller.selectedYear.value,
-                                items:
-                                    _years.map((year) {
-                                      return DropdownMenuItem(
-                                        value: year,
-                                        child: Text(year.toString()),
-                                      );
-                                    }).toList(),
-                                onChanged: (value) async {
+            child: Column(
+              children: [
+                Obx(
+                  () => Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 50,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: controller.calenderModel.length,
+                            itemBuilder: (context, index) {
+                              return InkWell(
+                                onTap: () async {
                                   setState(() {
-                                    controller.selectedYear.value = value!;
-                                    // _focusedDay = DateTime(
-                                    //   controller.selectedYear.value,
-                                    //   controller.selectedMonth.value,
-                                    // );
+                                    controller.selectedRoomIndex.value = index;
                                   });
+
+                                  // No role check needed, logic is the same
                                   if (controller.calenderModel.isNotEmpty) {
-                                    "Room available and found for Room- : ${controller.calenderModel[_selectedRoomIndex].roomName}"
-                                        .logW();
                                     getCurrectUserIdSpecific(
-                                      _selectedRoomIndex,
+                                      index,
                                       "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
                                       DateUtilsx.getEndDateFromMonthAndYear(
                                         controller.selectedMonth.value,
@@ -263,282 +195,304 @@ class _ReservationsScreenState extends State<ReservationsScreen> {
                                     );
                                   }
                                 },
-                                underline: const SizedBox(),
-                              ),
-                            ),
-
-                            // Month Dropdown
-                            Container(
-                              height: 35,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5.0,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFF333333),
-                                ),
-                                borderRadius: BorderRadius.circular(4.0),
-                              ),
-                              child: DropdownButton<int>(
-                                value: controller.selectedMonth.value,
-                                items: List.generate(_months.length, (index) {
-                                  return DropdownMenuItem(
-                                    value: index + 1,
-                                    child: Text(_months[index].tr),
-                                  );
-                                }),
-                                onChanged: (value) async {
-                                  setState(() {
-                                    controller.selectedMonth.value = value!;
-                                    // _focusedDay = DateTime(
-                                    //   controller.selectedYear.value,
-                                    //   controller.selectedMonth.value,
-                                    // );
-                                  });
-                                  if (controller.calenderModel.isNotEmpty) {
-                                    "Room available: ${controller.calenderModel[_selectedRoomIndex].roomName}"
-                                        .logW();
-                                    getCurrectUserIdSpecific(
-                                      _selectedRoomIndex,
-                                      "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                                      DateUtilsx.getEndDateFromMonthAndYear(
-                                        controller.selectedMonth.value,
-                                        controller.selectedYear.value,
+                                child: Obx(() {
+                                  return Container(
+                                    margin: const EdgeInsets.all(5),
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          controller.selectedRoomIndex.value ==
+                                                  index
+                                              ? const Color(0xFFD80665)
+                                              : const Color(0xFFE6E6E6),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: .5,
                                       ),
-                                    );
-                                  }
-                                },
-                                underline: const SizedBox(),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        Obx(
-                          () => Row(
-                            children: [
-                              Expanded(
-                                child: SizedBox(
-                                  height: 50,
-                                  child: ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: controller.calenderModel.length,
-                                    itemBuilder: (context, index) {
-                                      return InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            _selectedRoomIndex = index;
-                                          });
-                                          //Call API of ROOM HERE
-
-                                          if (controller
-                                              .calenderModel
-                                              .isNotEmpty) {
-                                            "Room available and found for Room- : ${controller.calenderModel[index].roomName}"
-                                                .logW();
-                                            if (credController.userRole.value ==
-                                                'admin') {
-                                              // getCurrectUserIdSpecific(
-                                              //   index,
-                                              //   "01/${controller.fixedMonthStart}/${controller.fixedYearStart}",
-                                              //   DateUtilsx
-                                              //       .getEndDateFromMonthAndYear(
-                                              //           controller.fixedMonthEnd,
-                                              //           controller.fixedYearEnd),
-                                              // );
-                                              getCurrectUserIdSpecific(
-                                                index,
-                                                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                                                DateUtilsx.getEndDateFromMonthAndYear(
-                                                  controller
-                                                      .selectedMonth
-                                                      .value,
-                                                  controller.selectedYear.value,
-                                                ),
-                                              );
-                                            } else {
-                                              getCurrectUserIdSpecific(
-                                                index,
-                                                "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
-                                                DateUtilsx.getEndDateFromMonthAndYear(
-                                                  controller
-                                                      .selectedMonth
-                                                      .value,
-                                                  controller.selectedYear.value,
-                                                ),
-                                              );
-                                            }
-                                          }
-                                          setState(() {});
-                                        },
-                                        child: Container(
-                                          margin: const EdgeInsets.all(5),
-                                          padding: const EdgeInsets.all(5),
-                                          decoration: BoxDecoration(
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10.0,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${controller.calenderModel[index].roomName}',
+                                          style: TextStyle(
                                             color:
-                                                _selectedRoomIndex == index
-                                                    ? const Color(0xFFD80665)
-                                                    : const Color(0xFFE6E6E6),
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.black,
-                                              width: .5,
-                                            ),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10.0,
-                                            ),
-                                            child: Center(
-                                              child: Text(
-                                                '${controller.calenderModel[index].roomName}',
-                                                style: TextStyle(
-                                                  color:
-                                                      _selectedRoomIndex ==
-                                                              index
-                                                          ? Colors.white
-                                                          : Colors.black,
-                                                ),
-                                              ),
-                                            ),
+                                                controller
+                                                            .selectedRoomIndex
+                                                            .value ==
+                                                        index
+                                                    ? Colors.white
+                                                    : Colors.black,
                                           ),
                                         ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-                        Obx(() {
-                          List<Reservation> reservation = [];
-                          if (controller.reservationModel.isNotEmpty) {
-                            reservation =
-                                controller.reservationModel.first.reservations;
-                          }
-
-                          if (_isLoading) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          }
-
-                          if (reservation.isEmpty) {
-                            return Center(
-                              child: Text(
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 20.sp),
-                                'You have no reservations. Please contact with admin.'
-                                    .tr,
-                              ),
-                            );
-                          }
-                          return Expanded(
-                            child: ListView.builder(
-                              itemCount: reservation.length,
-                              itemBuilder: (context, index) {
-                                if (reservation[index].status == "Confirmed") {
-                                  return GestureDetector(
-                                    onTap: () {
-                                      Get.to(
-                                        () => ReservationDetailScreen(
-                                          reservation: reservation[index],
-                                          roomName:
-                                              controller
-                                                  .reservationModel
-                                                  .first
-                                                  .roomName,
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      margin: const EdgeInsets.all(5),
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFE6E6E6),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                'Accommodation Name:'.tr,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              Text(
-                                                " ${controller.reservationModel.first.roomName}",
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10.h),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                'Customer Name:'.tr,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                  " ${reservation[index].customerName}",
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10.h),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                'Check In:'.tr,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              Text(
-                                                " ${reservation[index].rooms.first.dfrom}",
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10.h),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                'Check Out:'.tr,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              Text(
-                                                " ${reservation[index].rooms.first.dto}",
-                                              ),
-                                            ],
-                                          ),
-                                        ],
                                       ),
                                     ),
                                   );
-                                } else {
-                                  return Container();
-                                }
-                              },
+                                }),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Year, Month Dropdowns, and Today Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Today Button
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            // No need for _focusedDay in this screen
+                            controller.selectedYear.value = DateTime.now().year;
+                            controller.selectedMonth.value =
+                                DateTime.now().month;
+                          });
+                          if (controller.calenderModel.isNotEmpty) {
+                            getCurrectUserIdSpecific(
+                              controller.selectedRoomIndex.value,
+                              DateUtilsx.getStartDateOfMonth(),
+                              DateUtilsx.getEndDateOfMonth(),
+                            );
+                          }
+                        },
+                        child: Container(
+                          height: 35,
+                          width: 60,
+                          padding: const EdgeInsets.all(5.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFF333333)),
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: Center(
+                            child: Text(
+                              "Today".tr,
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Year Dropdown
+                      Obx(() {
+                        return Container(
+                          height: 35,
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFF333333)),
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: DropdownButton<int>(
+                            value: controller.selectedYear.value,
+                            items:
+                                _years.map((year) {
+                                  return DropdownMenuItem(
+                                    value: year,
+                                    child: Text(year.toString()),
+                                  );
+                                }).toList(),
+                            onChanged: (value) async {
+                              setState(() {
+                                controller.selectedYear.value = value!;
+                              });
+                              if (controller.calenderModel.isNotEmpty) {
+                                getCurrectUserIdSpecific(
+                                  controller.selectedRoomIndex.value,
+                                  "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                                  DateUtilsx.getEndDateFromMonthAndYear(
+                                    controller.selectedMonth.value,
+                                    controller.selectedYear.value,
+                                  ),
+                                );
+                              }
+                            },
+                            underline: const SizedBox(),
+                          ),
+                        );
+                      }),
+
+                      // Month Dropdown
+                      Obx(() {
+                        return Container(
+                          height: 35,
+                          padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFF333333)),
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                          child: DropdownButton<int>(
+                            value: controller.selectedMonth.value,
+                            items: List.generate(_months.length, (index) {
+                              return DropdownMenuItem(
+                                value: index + 1,
+                                child: Text(_months[index].tr),
+                              );
+                            }),
+                            onChanged: (value) async {
+                              setState(() {
+                                controller.selectedMonth.value = value!;
+                              });
+                              if (controller.calenderModel.isNotEmpty) {
+                                getCurrectUserIdSpecific(
+                                  controller.selectedRoomIndex.value,
+                                  "01/${controller.selectedMonth.value}/${controller.selectedYear.value}",
+                                  DateUtilsx.getEndDateFromMonthAndYear(
+                                    controller.selectedMonth.value,
+                                    controller.selectedYear.value,
+                                  ),
+                                );
+                              }
+                            },
+                            underline: const SizedBox(),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+                // Use Obx to react to changes in isLoading, isRoomLoading, and reservationModel
+                Obx(() {
+                  // Initial loading
+                  if (_isLoading.obs.value) {
+                    return const Expanded(child: Center(child: SizedBox()));
+                  }
+
+                  // Room-specific loading
+                  if (_isRoomLoading) {
+                    return const Expanded(child: Center(child: SizedBox()));
+                  }
+
+                  // Check if reservation data is available and not empty
+                  List<Reservation> reservation = [];
+                  if (controller.reservationModel.isNotEmpty) {
+                    reservation =
+                        controller.reservationModel.first.reservations;
+                  }
+
+                  // Handle empty reservations
+                  if (reservation.isEmpty) {
+                    return Expanded(
+                      child: Center(
+                        child: Text(
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 20.sp),
+                          'You have no reservations. Please contact with admin.'
+                              .tr,
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Display the reservation list
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: reservation.length,
+                      itemBuilder: (context, index) {
+                        // Show only Confirmed reservations
+                        if (reservation[index].status == "Confirmed") {
+                          return GestureDetector(
+                            onTap: () {
+                              Get.to(
+                                () => ReservationDetailScreen(
+                                  reservation: reservation[index],
+                                  roomName:
+                                      controller
+                                          .reservationModel
+                                          .first
+                                          .roomName,
+                                ),
+                              );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.all(5),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE6E6E6),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Accommodation Name:'.tr,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        " ${controller.reservationModel.first.roomName}",
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 10.h),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Customer Name:'.tr,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          " ${reservation[index].customerName}",
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 10.h),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Check In:'.tr,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        " ${reservation[index].rooms.first.dfrom}",
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 10.h),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Check Out:'.tr,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        " ${reservation[index].rooms.first.dto}",
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           );
-                        }),
-                      ],
+                        } else {
+                          return const SizedBox.shrink(); // Important: Use SizedBox.shrink() for efficiency
+                        }
+                      },
                     ),
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),

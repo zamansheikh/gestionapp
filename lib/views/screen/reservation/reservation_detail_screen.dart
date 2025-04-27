@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:gestionapp/models/reservation_model.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -89,21 +88,9 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
                       '${widget.reservation.rooms.first.occupancy?.children} children, '
                       '${widget.reservation.rooms.first.occupancy?.babies} babies',
                 ),
-                InkWell(
-                  onTap: () {
-                    Clipboard.setData(
-                      ClipboardData(text: widget.reservation.customerPhone),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Phone number copied to clipboard'.tr),
-                      ),
-                    );
-                  },
-                  child: ReservationDetailRow(
-                    label: 'Guest Phone:'.tr,
-                    value: widget.reservation.customerPhone,
-                  ),
+                ReservationDetailRow(
+                  label: 'Guest Phone:'.tr,
+                  value: widget.reservation.customerPhone,
                 ),
                 ReservationDetailRow(
                   label: 'Remarks:'.tr,
