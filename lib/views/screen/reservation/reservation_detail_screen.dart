@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gestionapp/models/reservation_model.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -88,9 +89,22 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
                       '${widget.reservation.rooms.first.occupancy?.children} children, '
                       '${widget.reservation.rooms.first.occupancy?.babies} babies',
                 ),
-                ReservationDetailRow(
-                  label: 'Guest Phone:'.tr,
-                  value: widget.reservation.customerPhone,
+                InkWell(
+                  onTap: () {
+                    Clipboard.setData(
+                      ClipboardData(text: widget.reservation.customerPhone),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Phone number copied to clipboard'.tr),
+                      ),
+                    );
+                  },
+                  child: ReservationDetailRow(
+                    label: 'Guest Phone:'.tr,
+                    value: widget.reservation.customerPhone,
+                    isPhone: true,
+                  ),
                 ),
                 ReservationDetailRow(
                   label: 'Remarks:'.tr,
@@ -113,11 +127,13 @@ class _ReservationDetailScreenState extends State<ReservationDetailScreen> {
 class ReservationDetailRow extends StatelessWidget {
   final String label;
   final String value;
+  final bool? isPhone;
 
   const ReservationDetailRow({
     super.key,
     required this.label,
     required this.value,
+    this.isPhone,
   });
 
   @override
@@ -135,6 +151,8 @@ class ReservationDetailRow extends StatelessWidget {
             ),
           ),
           Expanded(flex: 3, child: Text(value)),
+          if (isPhone != null && isPhone == true)
+            Icon(Icons.copy, color: Colors.grey, size: 20),
         ],
       ),
     );
