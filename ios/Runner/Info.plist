@@ -28,6 +28,10 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This is required by a third party plugin. But in our app we don't record or store any audio data.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires photo library access to allow users to select photos or upload user profile picture for authentication purposes.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
@@ -51,9 +55,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app requires photo library access to allow users to select photos or upload user profile picture for authentication purposes.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>This is required by a third party plugin. But in our app we don't record or store any audio data.</string>
 </dict>
 </plist>
