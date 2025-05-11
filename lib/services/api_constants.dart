@@ -1,7 +1,9 @@
 class ApiConstants {
-  static const String baseUrl = "http://46.202.132.176:5002/api/v1";
-  static const String imageBaseUrl = "http://46.202.132.176:5002/";
-  static const String socketUrl = "http://46.202.132.176:5002/";
+  static const String baseUrl = "http://168.231.113.161:5002/api/v1";
+
+  static const String imageBaseUrl = "http://168.231.113.161:5002/";
+  static const String socketUrl = "http://168.231.113.161:5002/";
+  // static const String socketUrl = "http://46.202.132.176:5002/";
 
   static const String signInEndPoint = "/auth/login";
   static String getPropertyById(String id) => "/property/owner/$id";
