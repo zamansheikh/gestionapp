@@ -21,7 +21,6 @@ android {
     namespace = "com.gestionviviendavacacional.gestionapp"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
-
     compileOptions {
         isCoreLibraryDesugaringEnabled = true // Corrected line
         sourceCompatibility = JavaVersion.VERSION_11
@@ -39,7 +38,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 21
+        versionCode = 22
         versionName = flutter.versionName
     }
 
