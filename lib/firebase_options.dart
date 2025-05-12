@@ -59,11 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDDjBCE-kPaFKBJtdPMMrTfp4qkooWL_js',
-    appId: '1:91889354158:ios:b973c71fed4ab7b77f343f',
+    appId: '1:91889354158:ios:7fed2de55caec9dd7f343f',
     messagingSenderId: '91889354158',
     projectId: 'gestion-v-v-app-kqvowz',
     storageBucket: 'gestion-v-v-app-kqvowz.firebasestorage.app',
-    iosBundleId: 'com.gestionviviendavacacional.gestionapp',
+    iosBundleId: 'com.gestion.gestionapp',
   );
 
 }
